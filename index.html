@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>~ start</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000; --panel:#010904;
+  --g:#39ff7a; --g2:#22c55e; --text:#b9ffd2;
+  --dim:#2f8f55; --faint:#123d23; --line:#0f5a2c; --err:#ff5f6d;
+  --glow:0 0 6px rgba(57,255,122,.55), 0 0 18px rgba(57,255,122,.22);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  background:var(--bg);color:var(--text);
+  font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  font-size:13.5px;line-height:1.6;-webkit-text-size-adjust:100%;
+}
+body{
+  min-height:100vh;min-height:100dvh;
+  padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px);
+}
+::selection{background:var(--g);color:#000}
+
+/* ── обёртка + котик ── */
+.wrap{position:relative;max-width:760px;margin:0 auto;padding-top:42px}
+.cat,.paws{position:absolute;left:22px;top:0;width:80px;height:50px}
+.cat{z-index:0;cursor:pointer;filter:drop-shadow(0 0 4px rgba(57,255,122,.55));-webkit-tap-highlight-color:transparent}
+.cat.hop{animation:hop .45s ease}
+@keyframes hop{30%{transform:translateY(-6px)}65%{transform:translateY(1px)}}
+.paws{z-index:2;pointer-events:none;filter:drop-shadow(0 0 3px rgba(57,255,122,.45))}
+.eye{transform-box:fill-box;transform-origin:center;animation:blink 6s infinite}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+
+/* ── экран ── */
+.screen{
+  position:relative;z-index:1;display:flex;flex-direction:column;
+  min-height:calc(100vh - 60px);
+  min-height:calc(100dvh - 66px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  background:var(--panel);
+  border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  box-shadow:0 0 40px rgba(57,255,122,.08), inset 0 0 80px rgba(0,0,0,.9);
+}
+#rain{position:absolute;inset:0;width:100%;height:100%;opacity:.14;z-index:0;pointer-events:none}
+.screen::before{ /* виньетка */
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
+  background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.6) 100%);
+}
+.screen::after{ /* сканлайны */
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 2px,rgba(0,0,0,.25) 3px);
+}
+.content{position:relative;z-index:2;display:flex;flex-direction:column;flex:1;padding:12px 16px 0}
+
+.top{display:flex;justify-content:flex-end;gap:14px;color:var(--dim);font-size:11.5px;letter-spacing:.03em}
+
+.hero{
+  min-height:42vh;min-height:42dvh;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;padding:8px 0;
+}
+#clock{
+  font-family:'VT323',monospace;font-size:clamp(88px,26vw,170px);line-height:.82;
+  color:var(--g);text-shadow:var(--glow);letter-spacing:2px;
+}
+#clock .colon{animation:colon 1s steps(1) infinite}
+@keyframes colon{50%{opacity:.15}}
+#date{color:var(--dim);margin-top:12px}
+#date b{color:var(--text);font-weight:400}
+
+#prompt{
+  width:100%;max-width:520px;margin-top:22px;
+  display:flex;align-items:center;gap:8px;padding:11px 14px;
+  border:1px solid var(--line);border-radius:10px;background:rgba(0,22,9,.8);
+  text-align:left;transition:border-color .2s,box-shadow .2s;cursor:text;
+}
+#prompt:focus-within{border-color:var(--g2);box-shadow:0 0 0 3px rgba(57,255,122,.12),0 0 26px rgba(57,255,122,.16)}
+.ps{white-space:nowrap;color:var(--g);text-shadow:var(--glow)}
+.ps .d{color:var(--dim);text-shadow:none}
+#in{
+  flex:1;min-width:0;background:transparent;border:0;outline:0;
+  color:var(--text);caret-color:var(--g);font:inherit;font-size:16px;
+}
+#in::placeholder{color:#1d5c35}
+
+#out{width:100%;max-width:520px;margin:6px auto 0;text-align:left}
+.blk{padding:9px 2px;border-bottom:1px dashed var(--faint);animation:fade .3s ease both}
+.blk:last-child{border-bottom:0}
+@keyframes fade{from{opacity:0;transform:translateY(-4px)}}
+.echo{color:var(--dim)} .echo .cmd{color:var(--text)}
+.line{white-space:pre-wrap;word-break:break-word}
+.hl{color:var(--g)} .dim{color:var(--dim)} .err{color:var(--err)}
+.help{display:grid;grid-template-columns:auto 1fr;gap:2px 16px}
+.help .hl{white-space:nowrap}
+
+.sect{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:12px;margin:20px 0 10px}
+.sect::after{content:"";flex:1;height:1px;background:var(--faint)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.grid a{
+  display:flex;align-items:center;gap:8px;padding:11px 12px;
+  border:1px solid var(--faint);border-radius:9px;background:rgba(0,30,12,.5);
+  color:var(--text);text-decoration:none;transition:all .15s;-webkit-tap-highlight-color:transparent;
+}
+.grid a .ic{color:var(--dim)}
+.grid a:hover,.grid a:focus-visible{border-color:var(--g2);color:var(--g);text-shadow:var(--glow);outline:0}
+.grid a:active{transform:scale(.97);background:rgba(57,255,122,.12)}
+
+.status{margin-top:auto;padding-top:22px}
+.bar{display:flex;flex-wrap:wrap;margin:0 -16px;border-top:1px solid var(--faint);font-size:11.5px}
+.bar span{padding:6px 10px;color:var(--dim);border-right:1px solid var(--faint)}
+.bar .mode{background:var(--g);color:#000;font-weight:600}
+.bar .right{margin-left:auto;border-right:0;border-left:1px solid var(--faint)}
+#sb-w{border-right:0 !important}
+
+@media (min-width:600px){ html,body{font-size:14.5px} #in{font-size:15px} }
+@media (prefers-reduced-motion:reduce){ .eye,#clock .colon{animation:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- голова котика (за экраном) -->
+  <svg class="cat" viewBox="0 0 80 50" aria-label="котик">
+    <path d="M10 52 V24 L15 5 L28 15 Q40 11 52 15 L65 5 L70 24 V52 Z" fill="#000" stroke="#39ff7a" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M17 11 L19 20 M63 11 L61 20" stroke="#2f8f55" stroke-width="1.5" stroke-linecap="round"/>
+    <g class="eye"><ellipse cx="30" cy="30" rx="5.5" ry="5" fill="#39ff7a"/><ellipse class="pupil" data-cx="30" cx="30" cy="30" rx="1.8" ry="4" fill="#000"/></g>
+    <g class="eye"><ellipse cx="50" cy="30" rx="5.5" ry="5" fill="#39ff7a"/><ellipse class="pupil" data-cx="50" cx="50" cy="30" rx="1.8" ry="4" fill="#000"/></g>
+    <path d="M38 37 L42 37 L40 39.5 Z" fill="#2f8f55"/>
+  </svg>
+  <!-- лапки (перед экраном) -->
+  <svg class="paws" viewBox="0 0 80 50" aria-hidden="true">
+    <path d="M16 46.5 Q16 38 23.5 38 Q31 38 31 46.5 Z" fill="#000" stroke="#39ff7a" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M21 41.5 V44.5 M26 41.5 V44.5" stroke="#2f8f55" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M49 46.5 Q49 38 56.5 38 Q64 38 64 46.5 Z" fill="#000" stroke="#39ff7a" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M54 41.5 V44.5 M59 41.5 V44.5" stroke="#2f8f55" stroke-width="1.3" stroke-linecap="round"/>
+  </svg>
+
+  <main class="screen">
+    <canvas id="rain"></canvas>
+    <div class="content">
+      <div class="top"><span>zsh — ~/start</span><span id="up">up 00:00</span></div>
+
+      <section class="hero">
+        <div id="clock">--:--</div>
+        <div id="date"></div>
+        <label id="prompt">
+          <span class="ps">❯</span>
+          <input id="in" type="text" placeholder="команда или поиск · help" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="команда">
+        </label>
+        <div id="out"></div>
+      </section>
+
+      <div class="sect">~/links</div>
+      <nav class="grid" id="links"></nav>
+
+      <div class="status">
+        <div class="bar">
+          <span class="mode">NORMAL</span>
+          <span id="sb-w">almaty …</span>
+          <span class="right" id="sb-os"></span>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ── настройки ─────────────────────────────────────────────
+const USER = 'guest', HOST = 'almaty';
+const CITY = { name:'almaty', lat:43.24, lon:76.89 };
+
+const LINKS = [
+  { k:'claude', url:'https://claude.ai',                 d:'Claude' },
+  { k:'mail',   url:'https://mail.proton.me',            d:'Proton Mail' },
+  { k:'drive',  url:'https://drive.proton.me',           d:'Proton Drive' },
+  { k:'yt',     url:'https://www.youtube.com',           d:'YouTube' },
+  { k:'gh',     url:'https://github.com',                d:'GitHub' },
+  { k:'tg',     url:'https://web.telegram.org',          d:'Telegram' },
+  { k:'music',  url:'https://soundcloud.com',            d:'SoundCloud' },
+  { k:'rice',   url:'https://www.reddit.com/r/unixporn', d:'r/unixporn' },
+];
+
+const enc = encodeURIComponent;
+const SEARCH = {
+  g:  q => 'https://duckduckgo.com/?q=' + enc(q),
+  yt: q => 'https://www.youtube.com/results?search_query=' + enc(q),
+  gh: q => 'https://github.com/search?q=' + enc(q),
+  r:  q => 'https://www.reddit.com/search/?q=' + enc(q),
+};
+
+// ── утилиты ───────────────────────────────────────────────
+const $ = s => document.querySelector(s);
+const out = $('#out'), inp = $('#in');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+
+const ua = navigator.userAgent;
+const OS = /iPhone|iPad/.test(ua) ? 'iOS' : /Android/.test(ua) ? 'Android' :
+           /Linux/.test(ua) ? 'EndeavourOS' : /Mac/.test(ua) ? 'macOS' : /Windows/.test(ua) ? 'Windows' : 'unknown';
+const BR = /FxiOS|Firefox/.test(ua) ? 'firefox' : /Edg/.test(ua) ? 'edge' :
+           /CriOS|Chrome/.test(ua) ? 'chrome' : /Safari/.test(ua) ? 'safari' : 'browser';
+$('#sb-os').textContent = OS + ' · ' + BR;
+
+$('#links').innerHTML = LINKS.map(l =>
+  `<a href="${l.url}" title="${esc(l.d)}"><span class="ic">›</span>${l.k}</a>`).join('');
+
+// ── часы + аптайм ─────────────────────────────────────────
+const T0 = Date.now();
+function greet(h) {
+  if (h < 5) return 'доброй ночи';
+  if (h < 12) return 'доброе утро';
+  if (h < 18) return 'добрый день';
+  return 'добрый вечер';
+}
+function tick() {
+  const n = new Date();
+  $('#clock').innerHTML = pad(n.getHours()) + '<span class="colon">:</span>' + pad(n.getMinutes());
+  const d = n.toLocaleDateString('ru-RU', { weekday:'long', day:'numeric', month:'long' });
+  $('#date').innerHTML = esc(d) + ' · <b>' + greet(n.getHours()) + '</b>';
+  const s = Math.floor((Date.now() - T0) / 1000);
+  $('#up').textContent = 'up ' + pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+}
+let lastMin = -1;
+function loopClock() {
+  const n = new Date();
+  if (n.getMinutes() !== lastMin) { lastMin = n.getMinutes(); tick(); }
+  else { const s = Math.floor((Date.now() - T0) / 1000); $('#up').textContent = 'up ' + pad(Math.floor(s / 60)) + ':' + pad(s % 60); }
+}
+tick(); setInterval(loopClock, 1000);
+
+// ── погода (open-meteo, без ключа) ────────────────────────
+function wdesc(c) {
+  if (c === 0) return 'ясно';
+  if (c <= 2) return 'малооблачно';
+  if (c === 3) return 'пасмурно';
+  if (c <= 48) return 'туман';
+  if (c <= 57) return 'морось';
+  if (c <= 67) return 'дождь';
+  if (c <= 77) return 'снег';
+  if (c <= 82) return 'ливень';
+  if (c <= 86) return 'снегопад';
+  return 'гроза';
+}
+let wP = null;
+function getW() {
+  if (wP) return wP;
+  wP = fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CITY.lat}&longitude=${CITY.lon}&current=temperature_2m,weather_code&timezone=auto`)
+    .then(r => r.json())
+    .then(j => {
+      const t = Math.round(j.current.temperature_2m);
+      return (t > 0 ? '+' : '') + t + '°C ' + wdesc(j.current.weather_code);
+    })
+    .catch(() => 'нет связи');
+  return wP;
+}
+getW().then(w => { $('#sb-w').textContent = CITY.name + ' ' + w; });
+
+// ── вывод ─────────────────────────────────────────────────
+function block(cmd) {
+  const b = document.createElement('div');
+  b.className = 'blk';
+  b.innerHTML = `<div class="echo">❯ <span class="cmd">${esc(cmd)}</span></div>`;
+  out.prepend(b);
+  while (out.children.length > 5) out.lastChild.remove();
+  return b;
+}
+function say(b, html, cls = '') {
+  const d = document.createElement('div');
+  d.className = 'line ' + cls;
+  d.innerHTML = html;
+  b.appendChild(d);
+  return d;
+}
+function go(b, url, label) {
+  say(b, '<span class="hl">→</span> <span class="dim">' + esc(label) + '…</span>');
+  setTimeout(() => { location.href = url; }, 180);
+}
+
+const HELP = [
+  ['help', 'эта справка'],
+  ['claude, mail…', 'открыть ярлык'],
+  ['g текст', 'поиск DuckDuckGo'],
+  ['yt текст', 'поиск YouTube'],
+  ['gh текст', 'поиск GitHub'],
+  ['r текст', 'поиск Reddit'],
+  ['site.com', 'открыть сайт'],
+  ['weather', 'погода'],
+  ['fetch', 'инфо о системе'],
+  ['clear', 'очистить'],
+  ['любой текст', 'сразу поиск'],
+];
+const grid2 = rows => '<div class="help">' + rows.map(([a, b]) => `<span class="hl">${a}</span><span class="dim">${b}</span>`).join('') + '</div>';
+const CMDS = ['help', 'clear', 'weather', 'date', 'echo', 'fetch', 'whoami', 'g', 'yt', 'gh', 'r'];
+
+// ── команды ───────────────────────────────────────────────
+const hist = []; let hi = -1;
+
+async function run(raw) {
+  const input = raw.trim();
+  if (!input) return;
+  hist.unshift(input); hi = -1;
+
+  const [cmd, ...rest] = input.split(/\s+/);
+  const arg = rest.join(' ');
+  const c = cmd.toLowerCase();
+
+  if (c === 'clear' || c === 'cls') { out.innerHTML = ''; return; }
+  const b = block(input);
+
+  if (c === 'help' || c === '?') return void say(b, grid2(HELP));
+  if (c === 'ls') return void say(b, LINKS.map(l => '<span class="hl">' + l.k + '</span>').join('  '));
+  if (c === 'weather' || c === 'погода') { const w = await getW(); return void say(b, '<span class="hl">' + CITY.name + '</span> ' + esc(w)); }
+  if (c === 'date') return void say(b, esc(new Date().toLocaleString('ru-RU')));
+  if (c === 'echo') return void say(b, esc(arg));
+  if (c === 'whoami') return void say(b, USER);
+  if (c === 'sudo') return void say(b, USER + ' is not in the sudoers file. This incident will be reported.', 'err');
+  if (c === 'cat' || c === 'meow' || c === 'мяу') { meow(); return void say(b, 'мяу =^.^='); }
+  if (c === 'fetch' || c === 'neofetch' || c === 'fastfetch') {
+    const w = await getW();
+    return void say(b, grid2([['user', USER + '@' + HOST], ['os', OS], ['browser', BR], ['shell', 'zsh 5.9'], ['city', CITY.name], ['weather', esc(w)]]));
+  }
+  if (SEARCH[c] && arg) return go(b, SEARCH[c](arg), 'поиск: ' + arg);
+
+  const l = LINKS.find(x => x.k === c);
+  if (l && !arg) return go(b, l.url, l.d);
+
+  if (!/\s/.test(input) && /^(https?:\/\/)?[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(input))
+    return go(b, /^https?:\/\//i.test(input) ? input : 'https://' + input, input);
+
+  go(b, SEARCH.g(input), 'ищу: ' + input);
+}
+
+inp.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const v = inp.value; inp.value = '';
+    run(v);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (hi < hist.length - 1) { hi++; inp.value = hist[hi]; }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (hi > 0) { hi--; inp.value = hist[hi]; } else { hi = -1; inp.value = ''; }
+  } else if (e.key === 'Tab') {
+    e.preventDefault();
+    const v = inp.value.toLowerCase();
+    const m = [...LINKS.map(l => l.k), ...CMDS].filter(x => x.startsWith(v));
+    if (v && m.length === 1) inp.value = m[0] + ' ';
+  } else if (e.key === 'l' && e.ctrlKey) {
+    e.preventDefault(); out.innerHTML = '';
+  }
+});
+if (!matchMedia('(pointer: coarse)').matches) inp.focus();
+
+// ── котик: следит глазами, прыгает по тапу ────────────────
+const catEl = $('.cat');
+const pupils = [...document.querySelectorAll('.pupil')];
+function look(x, y) {
+  const r = catEl.getBoundingClientRect();
+  pupils.forEach(p => {
+    const ex = r.left + (+p.dataset.cx) * r.width / 80;
+    const ey = r.top + 30 * r.height / 50;
+    const dx = x - ex, dy = y - ey, d = Math.hypot(dx, dy) || 1;
+    const m = Math.min(2.4, d / 30);
+    p.setAttribute('transform', `translate(${(dx / d * m).toFixed(2)} ${(dy / d * m * 0.6).toFixed(2)})`);
+  });
+}
+addEventListener('pointermove', e => look(e.clientX, e.clientY));
+addEventListener('touchstart', e => { const t = e.touches[0]; if (t) look(t.clientX, t.clientY); }, { passive:true });
+inp.addEventListener('input', () => {
+  const r = inp.getBoundingClientRect();
+  look(r.left + Math.min(r.width, inp.value.length * 9.6), r.top + r.height / 2);
+});
+function meow() {
+  catEl.classList.remove('hop'); void catEl.getBoundingClientRect(); catEl.classList.add('hop');
+}
+catEl.addEventListener('click', () => { meow(); say(block('meow'), 'мяу =^.^='); });
+
+// ── матричный дождь ───────────────────────────────────────
+(() => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cv = $('#rain'), ctx = cv.getContext('2d'), scr = $('.screen');
+  const CH = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホ0123456789';
+  const FS = 15;
+  let W = 0, H = 0, drops = [], speed = [];
+  function size() {
+    const r = scr.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#010904'; ctx.fillRect(0, 0, W, H);
+    const cols = Math.ceil(W / FS);
+    while (drops.length < cols) { drops.push(Math.random() * -H / FS); speed.push(.35 + Math.random() * .65); }
+  }
+  new ResizeObserver(size).observe(scr);
+  size();
+  let last = 0;
+  function frame(t) {
+    requestAnimationFrame(frame);
+    if (document.hidden || t - last < 60) return;
+    last = t;
+    ctx.fillStyle = 'rgba(1,9,4,.14)'; ctx.fillRect(0, 0, W, H);
+    ctx.font = FS + 'px monospace';
+    for (let i = 0; i < drops.length; i++) {
+      const y = drops[i] * FS;
+      if (y > 0) {
+        ctx.fillStyle = Math.random() < .08 ? '#d8ffe6' : '#39ff7a';
+        ctx.fillText(CH[(Math.random() * CH.length) | 0], i * FS, y);
+      }
+      drops[i] += speed[i];
+      if (y > H && Math.random() > .97) drops[i] = Math.random() * -20;
+    }
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
